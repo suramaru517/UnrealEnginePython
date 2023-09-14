@@ -224,7 +224,7 @@ static PyObject *py_ue_icollection_manager_remove_from_collection(PyObject *cls,
 	if (CollectionManager.RemoveFromCollection(
 		FName(UTF8_TO_TCHAR(name)),
 		(ECollectionShareType::Type)type,
-		FName(UTF8_TO_TCHAR(object_path))
+		FSoftObjectPath(UTF8_TO_TCHAR(object_path))
 	))
 		Py_RETURN_TRUE;
 	Py_RETURN_FALSE;
@@ -244,7 +244,7 @@ static PyObject *py_ue_icollection_manager_add_to_collection(PyObject *cls, PyOb
 	if (CollectionManager.AddToCollection(
 		FName(UTF8_TO_TCHAR(name)),
 		(ECollectionShareType::Type)type,
-		FName(UTF8_TO_TCHAR(object_path))
+		FSoftObjectPath(UTF8_TO_TCHAR(object_path))
 	))
 		Py_RETURN_TRUE;
 	Py_RETURN_FALSE;
@@ -395,11 +395,11 @@ static PyObject *py_ue_icollection_manager_get_assets_in_collection(PyObject *cl
 		return nullptr;
 
 	ICollectionManager &CollectionManager = FCollectionManagerModule::GetModule().Get();
-	TArray<FName> paths;
+	TArray<FSoftObjectPath> paths;
 	if (CollectionManager.GetAssetsInCollection(FName(UTF8_TO_TCHAR(name)), (ECollectionShareType::Type)type, paths, (ECollectionRecursionFlags::Flags)recursion))
 	{
 		PyObject *py_list = PyList_New(0);
-		for (FName path : paths)
+		for (const FSoftObjectPath& path : paths)
 		{
 			PyList_Append(py_list, PyUnicode_FromString(TCHAR_TO_UTF8(*path.ToString())));
 		}
@@ -420,11 +420,11 @@ static PyObject *py_ue_icollection_manager_get_objects_in_collection(PyObject *c
 
 
 	ICollectionManager &CollectionManager = FCollectionManagerModule::GetModule().Get();
-	TArray<FName> paths;
+	TArray<FSoftObjectPath> paths;
 	if (CollectionManager.GetObjectsInCollection(FName(UTF8_TO_TCHAR(name)), (ECollectionShareType::Type)type, paths, (ECollectionRecursionFlags::Flags)recursion))
 	{
 		PyObject *py_list = PyList_New(0);
-		for (FName path : paths)
+		for (const FSoftObjectPath& path : paths)
 		{
 			PyList_Append(py_list, PyUnicode_FromString(TCHAR_TO_UTF8(*path.ToString())));
 		}
@@ -445,11 +445,11 @@ static PyObject *py_ue_icollection_manager_get_classes_in_collection(PyObject *c
 
 
 	ICollectionManager &CollectionManager = FCollectionManagerModule::GetModule().Get();
-	TArray<FName> paths;
+	TArray<FTopLevelAssetPath> paths;
 	if (CollectionManager.GetClassesInCollection(FName(UTF8_TO_TCHAR(name)), (ECollectionShareType::Type)type, paths, (ECollectionRecursionFlags::Flags)recursion))
 	{
 		PyObject *py_list = PyList_New(0);
-		for (FName path : paths)
+		for (const FTopLevelAssetPath& path : paths)
 		{
 			PyList_Append(py_list, PyUnicode_FromString(TCHAR_TO_UTF8(*path.ToString())));
 		}

@@ -4,8 +4,6 @@
 
 #if ENGINE_MAJOR_VERSION == 5 || (ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 24)
 #include "Subsystems/AssetEditorSubsystem.h"
-
-// #include "UnrealEd.h"
 #endif
 
 #include "SPythonEditor.h"

@@ -9,7 +9,7 @@ PyObject *py_ue_static_mesh_get_bounds(ue_PyUObject *self, PyObject * args)
         return PyErr_Format(PyExc_Exception, "uobject is not a UStaticMesh");
 
     FBoxSphereBounds bounds = mesh->GetBounds();
-    UScriptStruct *u_struct = FindObject<UScriptStruct>(ANY_PACKAGE, UTF8_TO_TCHAR("BoxSphereBounds"));
+    UScriptStruct *u_struct = FindFirstObject<UScriptStruct>(UTF8_TO_TCHAR("BoxSphereBounds"));
     if (!u_struct)
     {
         return PyErr_Format(PyExc_Exception, "unable to get BoxSphereBounds struct");

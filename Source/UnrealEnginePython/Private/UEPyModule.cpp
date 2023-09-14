@@ -127,6 +127,7 @@
 #endif
 
 #include "Runtime/Core/Public/UObject/PropertyPortFlags.h"
+#include "UObject/LinkerLoad.h"
 
 #if !(ENGINE_MAJOR_VERSION == 5 || (ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 18))
 #define USoftObjectProperty UAssetObjectProperty
@@ -778,8 +779,6 @@ static PyMethodDef ue_PyUObject_methods[] = {
 
 #if WITH_EDITOR
 #if ENGINE_MAJOR_VERSION == 5 || (ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION > 13)
-	{ "get_raw_animation_data", (PyCFunction)py_ue_anim_sequence_get_raw_animation_data, METH_VARARGS, "" },
-	{ "get_raw_animation_track", (PyCFunction)py_ue_anim_sequence_get_raw_animation_track, METH_VARARGS, "" },
 	{ "add_new_raw_track", (PyCFunction)py_ue_anim_sequence_add_new_raw_track, METH_VARARGS, "" },
 #if !(ENGINE_MAJOR_VERSION == 5 || (ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 23))
 	{ "update_compressed_track_map_from_raw", (PyCFunction)py_ue_anim_sequence_update_compressed_track_map_from_raw, METH_VARARGS, "" },
@@ -1918,7 +1917,7 @@ UClass* unreal_engine_new_uclass(char* name, UClass* outer_parent)
 		outer = parent->GetOuter();
 	}
 
-	UClass* new_object = FindObject<UClass>(ANY_PACKAGE, UTF8_TO_TCHAR(name));
+	UClass* new_object = FindFirstObject<UClass>(UTF8_TO_TCHAR(name));
 	if (!new_object)
 	{
 		new_object = NewObject<UPythonClass>(outer, UTF8_TO_TCHAR(name), RF_Public | RF_Transient | RF_MarkAsNative);
@@ -1950,7 +1949,7 @@ UClass* unreal_engine_new_uclass(char* name, UClass* outer_parent)
 		new_object->ClearFunctionMapsCaches();
 		new_object->PurgeClass(true);
 		new_object->Children = nullptr;
-		new_object->ClassAddReferencedObjects = parent->ClassAddReferencedObjects;
+		new_object->CppClassStaticFunctions = parent->CppClassStaticFunctions;
 		// NOTA BENE we may need to do something with ChildProperties now
 		// as apparently the previous Children list now split into 2 lists
 		// with properties in ChildProperties
@@ -4311,7 +4310,7 @@ PyObject* py_ue_ufunction_call(UFunction* u_function, UObject* u_obj, PyObject* 
 			if (!default_key_value.IsEmpty())
 			{
 #if ENGINE_MAJOR_VERSION == 5 || (ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 17)
-				prop->ImportText(*default_key_value, prop->ContainerPtrToValuePtr<uint8>(buffer), PPF_None, NULL);
+				prop->ImportText_Direct(*default_key_value, prop->ContainerPtrToValuePtr<uint8>(buffer), NULL, PPF_None);
 #else
 				prop->ImportText(*default_key_value, prop->ContainerPtrToValuePtr<uint8>(buffer), PPF_Localized, NULL);
 #endif
@@ -5416,7 +5415,7 @@ FGuid* ue_py_check_fguid(PyObject* py_obj)
 		return nullptr;
 	}
 
-	if (ue_py_struct->u_struct == FindObject<UScriptStruct>(ANY_PACKAGE, UTF8_TO_TCHAR((char*)"Guid")))
+	if (ue_py_struct->u_struct == FindFirstObject<UScriptStruct>(UTF8_TO_TCHAR((char*)"Guid")))
 	{
 		return (FGuid*)ue_py_struct->u_struct_ptr;
 	}

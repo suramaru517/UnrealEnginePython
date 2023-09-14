@@ -174,7 +174,7 @@ static PyObject* py_ue_ffoliage_instance_get_procedural_guid(ue_PyFFoliageInstan
 {
 	get_instance(self);
 	FGuid guid = instance->ProceduralGuid;
-	return py_ue_new_owned_uscriptstruct(FindObject<UScriptStruct>(ANY_PACKAGE, UTF8_TO_TCHAR((char*)"Guid")), (uint8*)& guid);
+	return py_ue_new_owned_uscriptstruct(FindFirstObject<UScriptStruct>(UTF8_TO_TCHAR((char*)"Guid")), (uint8*)& guid);
 }
 
 static PyObject* py_ue_ffoliage_instance_get_base_id(ue_PyFFoliageInstance* self, void* closure)

@@ -18,7 +18,7 @@
 #include "Editor/UnrealEd/Public/Toolkits/AssetEditorManager.h"
 #endif
 #if ENGINE_MAJOR_VERSION == 5 || (ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 20)
-#include "LevelSequenceEditor/Private/LevelSequenceEditorToolkit.h"
+#include "ILevelSequenceEditorToolkit.h"
 #else
 #include "Private/LevelSequenceEditorToolkit.h"
 #endif
@@ -38,7 +38,6 @@
 #else
 #include "Editor/UnrealEd/Public/FbxImporter.h"
 #endif
-#include "Editor/MovieSceneTools/Public/MatineeImportTools.h"
 #endif
 
 #include "GameFramework/Actor.h"
@@ -49,6 +48,7 @@
 #include "Wrappers/UEPyFFrameNumber.h"
 #endif
 
+#include "Misc/EngineVersionComparison.h"
 
 #if ENGINE_MAJOR_VERSION == 5 || (ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 20)
 static bool magic_get_frame_number(UMovieScene *MovieScene, PyObject *py_obj, FFrameNumber *dest)
@@ -256,7 +256,7 @@ PyObject *py_ue_sequencer_changed(ue_PyUObject *self, PyObject * args)
 #endif
 	if (editor)
 	{
-		FLevelSequenceEditorToolkit *toolkit = (FLevelSequenceEditorToolkit *)editor;
+		ILevelSequenceEditorToolkit *toolkit = (ILevelSequenceEditorToolkit *)editor;
 		ISequencer *sequencer = toolkit->GetSequencer().Get();
 #if !(ENGINE_MAJOR_VERSION == 5 || (ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 13))
 		sequencer->NotifyMovieSceneDataChanged();
@@ -497,7 +497,7 @@ PyObject *py_ue_sequencer_add_actor(ue_PyUObject *self, PyObject * args)
 #endif
 	if (editor)
 	{
-		FLevelSequenceEditorToolkit *toolkit = (FLevelSequenceEditorToolkit *)editor;
+		ILevelSequenceEditorToolkit *toolkit = (ILevelSequenceEditorToolkit *)editor;
 		ISequencer *sequencer = toolkit->GetSequencer().Get();
 		sequencer->AddActors(actors);
 	}
@@ -561,7 +561,7 @@ PyObject *py_ue_sequencer_add_actor_component(ue_PyUObject *self, PyObject * arg
 	FGuid new_guid;
 	if (editor)
 	{
-		FLevelSequenceEditorToolkit *toolkit = (FLevelSequenceEditorToolkit *)editor;
+		ILevelSequenceEditorToolkit *toolkit = (ILevelSequenceEditorToolkit *)editor;
 		ISequencer *sequencer = toolkit->GetSequencer().Get();
 		new_guid = sequencer->GetHandleToObject(actorComponent);
 	}
@@ -620,7 +620,7 @@ PyObject *py_ue_sequencer_make_new_spawnable(ue_PyUObject *self, PyObject * args
 		return PyErr_Format(PyExc_Exception, "unable to access sequencer");
 	}
 
-	FLevelSequenceEditorToolkit *toolkit = (FLevelSequenceEditorToolkit *)editor;
+	ILevelSequenceEditorToolkit *toolkit = (ILevelSequenceEditorToolkit *)editor;
 	ISequencer *sequencer = toolkit->GetSequencer().Get();
 	FGuid new_guid = sequencer->MakeNewSpawnable(*actor);
 
@@ -641,7 +641,11 @@ PyObject *py_ue_sequencer_master_tracks(ue_PyUObject *self, PyObject * args)
 
 	PyObject *py_tracks = PyList_New(0);
 
+#if UE_VERSION_OLDER_THAN(5, 2, 0)
 	TArray<UMovieSceneTrack *> tracks = scene->GetMasterTracks();
+#else
+	TArray<UMovieSceneTrack *> tracks = scene->GetTracks();
+#endif
 
 	for (UMovieSceneTrack *track : tracks)
 	{
@@ -824,7 +828,7 @@ PyObject *py_ue_sequencer_create_folder(ue_PyUObject *self, PyObject * args)
 	else
 	{
 		scene->Modify();
-		scene->GetRootFolders().Add(new_folder);
+		scene->AddRootFolder(new_folder);
 	}
 
 	Py_RETURN_UOBJECT(new_folder);
@@ -961,7 +965,12 @@ PyObject *py_ue_sequencer_add_master_track(ue_PyUObject *self, PyObject * args)
 	if (!u_class->IsChildOf<UMovieSceneTrack>())
 		return PyErr_Format(PyExc_Exception, "uobject is not a UMovieSceneTrack class");
 
+#if UE_VERSION_OLDER_THAN(5, 2, 0)
 	UMovieSceneTrack *track = scene->AddMasterTrack(u_class);
+#else
+	UMovieSceneTrack *track = scene->AddTrack(u_class);
+#endif
+
 	if (!track)
 		return PyErr_Format(PyExc_Exception, "unable to create new master track");
 
@@ -1523,7 +1532,7 @@ PyObject *py_ue_sequencer_remove_master_track(ue_PyUObject *self, PyObject * arg
 
 	UMovieScene	*scene = seq->GetMovieScene();
 
-	if (scene->RemoveMasterTrack(*track))
+	if (scene->RemoveTrack(*track))
 		Py_RETURN_TRUE;
 
 	Py_RETURN_FALSE;

@@ -2,7 +2,7 @@
 
 #include "UEPyModule.h"
 #include "Animation/AnimSequence.h"
-#include "Animation/BlendSpaceBase.h"
+#include "Animation/BlendSpace.h"
 #include "Animation/AnimMontage.h"
 #include "Wrappers/UEPyFRawAnimSequenceTrack.h"
 

@@ -4,6 +4,7 @@
 #include "Runtime/Engine/Classes/Engine/Texture.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Engine/Texture2D.h"
+#include "TextureResource.h"
 
 PyObject *py_ue_texture_update_resource(ue_PyUObject *self, PyObject * args)
 {
@@ -367,7 +368,7 @@ PyObject *py_unreal_engine_compress_image_array(PyObject * self, PyObject * args
 	TArray<uint8> output;
 
 	Py_BEGIN_ALLOW_THREADS;
-	FImageUtils::CompressImageArray(width, height, colors, output);
+	FImageUtils::ThumbnailCompressImageArray(width, height, colors, output);
 	Py_END_ALLOW_THREADS;
 
 	return PyBytes_FromStringAndSize((char *)output.GetData(), output.Num());

@@ -14,6 +14,7 @@
 #include "Slate/UEPySWindow.h"
 // required for GEngine access
 #include "Engine/Engine.h"
+#include "Engine/GameViewportClient.h"
 
 PyObject *py_ue_game_viewport_client_get_window(ue_PyUObject *self, PyObject *args)
 {

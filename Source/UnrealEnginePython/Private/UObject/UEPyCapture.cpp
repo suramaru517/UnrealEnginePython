@@ -138,8 +138,8 @@ private:
 
 		if (bIsDeviceValid)
 		{
-			TransientMasterVolume = AudioDevice->GetTransientMasterVolume();
-			AudioDevice->SetTransientMasterVolume(0.0f);
+			TransientPrimaryVolume = AudioDevice->GetTransientPrimaryVolume();
+			AudioDevice->SetTransientPrimaryVolume(0.0f);
 		}
 
 		// play at the next tick
@@ -363,7 +363,7 @@ private:
 
 		if (bIsDeviceValid)
 		{
-			AudioDevice->SetTransientMasterVolume(TransientMasterVolume);
+			AudioDevice->SetTransientPrimaryVolume(TransientPrimaryVolume);
 		}
 
 		CurrentCaptureObject->Close();
@@ -407,7 +407,7 @@ private:
 	UWorld* CapturingFromWorld;
 
 	bool bScreenMessagesWereEnabled;
-	float TransientMasterVolume;
+	float TransientPrimaryVolume;
 	int32 BackedUpStreamingPoolSize;
 	int32 BackedUpUseFixedPoolSize;
 	TArray<uint8> BackedUpPlaySettings;

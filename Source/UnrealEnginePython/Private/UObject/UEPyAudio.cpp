@@ -78,13 +78,15 @@ PyObject *py_ue_sound_get_data(ue_PyUObject *self, PyObject * args)
 	if (!sound)
 		return PyErr_Format(PyExc_Exception, "UObject is not a USoundWave.");
 
-	FByteBulkData raw_data = sound->RawData;
+#if WITH_EDITORONLY_DATA
+	const TFuture<FSharedBuffer> buffer_future = sound->RawData.GetPayload();
 
-	char *data = (char *)raw_data.Lock(LOCK_READ_ONLY);
-	int32 data_size = raw_data.GetBulkDataSize();
+	const char *data = (char *)buffer_future.Get().GetData();
+	const int32 data_size = buffer_future.Get().GetSize();
 	PyObject *py_data = PyBytes_FromStringAndSize(data, data_size);
-	raw_data.Unlock();
 	return py_data;
+#endif
+	Py_RETURN_NONE;
 }
 
 PyObject *py_ue_sound_set_data(ue_PyUObject *self, PyObject * args)
@@ -105,10 +107,10 @@ PyObject *py_ue_sound_set_data(ue_PyUObject *self, PyObject * args)
 	sound->FreeResources();
 	sound->InvalidateCompressedData();
 
-	sound->RawData.Lock(LOCK_READ_WRITE);
-	void *data = sound->RawData.Realloc(sound_buffer.len);
-	FMemory::Memcpy(data, sound_buffer.buf, sound_buffer.len);
-	sound->RawData.Unlock();
+	FSharedBuffer shared_buffer = FSharedBuffer::Clone(sound_buffer.buf, sound_buffer.len);
+#if WITH_EDITORONLY_DATA
+	sound->RawData.UpdatePayload(shared_buffer);
+#endif
 
 	Py_RETURN_NONE;
 }
@@ -136,7 +138,7 @@ PyObject *py_ue_play_sound_at_location(ue_PyUObject *self, PyObject * args)
 	}
 	else if (PyUnicodeOrString_Check(sound))
 	{
-		sound_object = FindObject<USoundBase>(ANY_PACKAGE, UTF8_TO_TCHAR(UEPyUnicode_AsUTF8(sound)));
+		sound_object = FindFirstObject<USoundBase>(UTF8_TO_TCHAR(UEPyUnicode_AsUTF8(sound)));
 	}
 
 	if (!sound_object)

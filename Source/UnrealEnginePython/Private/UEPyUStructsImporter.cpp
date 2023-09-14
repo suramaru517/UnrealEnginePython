@@ -10,7 +10,7 @@ static PyObject *ue_PyUStructsImporter_getattro(ue_PyUStructsImporter *self, PyO
 			const char *attr = UEPyUnicode_AsUTF8(attr_name);
 			if (attr[0] != '_')
 			{
-				UScriptStruct *u_struct = FindObject<UScriptStruct>(ANY_PACKAGE, UTF8_TO_TCHAR(attr));
+				UScriptStruct *u_struct = FindFirstObject<UScriptStruct>(UTF8_TO_TCHAR(attr));
 				if (u_struct)
 				{
 					// swallow old exception

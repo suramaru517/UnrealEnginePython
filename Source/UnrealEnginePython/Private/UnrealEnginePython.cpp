@@ -25,6 +25,8 @@
 #include "Runtime/Core/Public/Mac/CocoaThread.h"
 #endif
 
+#include <locale.h>
+
 void unreal_engine_init_py_module();
 void init_unreal_engine_builtin();
 
@@ -550,8 +552,6 @@ void FUnrealEnginePythonModule::StartupModule()
 		FPlatformMisc::SetUTF8Output();
 	}
 #endif
-
-	PyEval_InitThreads();
 
 #if WITH_EDITOR
 	StyleSet = MakeShareable(new FSlateStyleSet("UnrealEnginePython"));

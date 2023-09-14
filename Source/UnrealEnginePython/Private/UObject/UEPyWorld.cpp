@@ -349,14 +349,11 @@ PyObject *py_ue_world_create_folder(ue_PyUObject *self, PyObject * args)
 	if (!PyArg_ParseTuple(args, "s:world_create_folder", &path))
 		return nullptr;
 
-	if (!FActorFolders::IsAvailable())
-		return PyErr_Format(PyExc_Exception, "FActorFolders is not available");
-
 	UWorld *world = ue_get_uworld(self);
 	if (!world)
 		return PyErr_Format(PyExc_Exception, "unable to retrieve UWorld from uobject");
 
-	FName FolderPath = FName(UTF8_TO_TCHAR(path));
+	const FFolder FolderPath(FFolder::GetWorldRootFolder(world).GetRootObject(), UTF8_TO_TCHAR(path));
 
 	FActorFolders::Get().CreateFolder(*world, FolderPath);
 
@@ -372,14 +369,11 @@ PyObject *py_ue_world_delete_folder(ue_PyUObject *self, PyObject * args)
 	if (!PyArg_ParseTuple(args, "s:world_delete_folder", &path))
 		return nullptr;
 
-	if (!FActorFolders::IsAvailable())
-		return PyErr_Format(PyExc_Exception, "FActorFolders is not available");
-
 	UWorld *world = ue_get_uworld(self);
 	if (!world)
 		return PyErr_Format(PyExc_Exception, "unable to retrieve UWorld from uobject");
 
-	FName FolderPath = FName(UTF8_TO_TCHAR(path));
+	const FFolder FolderPath(FFolder::GetWorldRootFolder(world).GetRootObject(), UTF8_TO_TCHAR(path));
 
 	FActorFolders::Get().DeleteFolder(*world, FolderPath);
 
@@ -396,15 +390,13 @@ PyObject *py_ue_world_rename_folder(ue_PyUObject *self, PyObject * args)
 	if (!PyArg_ParseTuple(args, "ss:world_rename_folder", &path, &new_path))
 		return nullptr;
 
-	if (!FActorFolders::IsAvailable())
-		return PyErr_Format(PyExc_Exception, "FActorFolders is not available");
-
 	UWorld *world = ue_get_uworld(self);
 	if (!world)
 		return PyErr_Format(PyExc_Exception, "unable to retrieve UWorld from uobject");
 
-	FName FolderPath = FName(UTF8_TO_TCHAR(path));
-	FName NewFolderPath = FName(UTF8_TO_TCHAR(new_path));
+	const FFolder::FRootObject& root_object = FFolder::GetWorldRootFolder(world).GetRootObject();
+	const FFolder FolderPath(root_object, UTF8_TO_TCHAR(path));
+	const FFolder NewFolderPath(root_object, UTF8_TO_TCHAR(new_path));
 
 	if (FActorFolders::Get().RenameFolderInWorld(*world, FolderPath, NewFolderPath))
 		Py_RETURN_TRUE;
@@ -416,9 +408,6 @@ PyObject *py_ue_world_folders(ue_PyUObject *self, PyObject * args)
 {
 
 	ue_py_check(self);
-
-	if (!FActorFolders::IsAvailable())
-		return PyErr_Format(PyExc_Exception, "FActorFolders is not available");
 
 	UWorld *world = ue_get_uworld(self);
 	if (!world)

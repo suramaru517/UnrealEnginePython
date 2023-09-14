@@ -81,7 +81,7 @@ static PyMethodDef ue_PyFAssetData_methods[] = {
 
 static PyObject *py_ue_fassetdata_get_asset_class(ue_PyFAssetData *self, void *closure)
 {
-	return PyUnicode_FromString(TCHAR_TO_UTF8(*self->asset_data.AssetClass.ToString()));
+	return PyUnicode_FromString(TCHAR_TO_UTF8(*self->asset_data.AssetClassPath.ToString()));
 }
 
 static PyObject *py_ue_fassetdata_get_asset_name(ue_PyFAssetData *self, void *closure)
@@ -98,7 +98,7 @@ static PyObject *py_ue_fassetdata_get_group_names(ue_PyFAssetData *self, void *c
 
 static PyObject *py_ue_fassetdata_get_object_path(ue_PyFAssetData *self, void *closure)
 {
-	return PyUnicode_FromString(TCHAR_TO_UTF8(*self->asset_data.ObjectPath.ToString()));
+	return PyUnicode_FromString(TCHAR_TO_UTF8(*self->asset_data.GetObjectPathString()));
 }
 
 static PyObject *py_ue_fassetdata_get_package_flags(ue_PyFAssetData *self, void *closure)

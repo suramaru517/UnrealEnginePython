@@ -9,9 +9,8 @@
 #include "Engine/UserDefinedEnum.h"
 
 #if WITH_EDITOR
-#include "Runtime/AssetRegistry/Public/AssetRegistryModule.h"
+#include "AssetRegistry/AssetRegistryModule.h"
 #include "ObjectTools.h"
-#include "UnrealEd.h"
 #include "Runtime/Core/Public/HAL/FeedbackContextAnsi.h"
 
 #include "Wrappers/UEPyFObjectThumbnail.h"

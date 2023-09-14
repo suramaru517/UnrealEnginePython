@@ -1,6 +1,6 @@
 #pragma once
 
-#include "UnrealEd.h"
+#include "Factories/FbxFactory.h"
 
 #include "PyFbxFactory.generated.h"
 

@@ -5,11 +5,10 @@
 
 #include "Developer/AssetTools/Public/AssetToolsModule.h"
 #include "Editor/UnrealEd/Classes/Factories/Factory.h"
-#include "Runtime/AssetRegistry/Public/AssetRegistryModule.h"
+#include "AssetRegistry/AssetRegistryModule.h"
 #include "Kismet2/KismetEditorUtilities.h"
 #include "Editor/ContentBrowser/Public/ContentBrowserModule.h"
 #include "Editor/UnrealEd/Public/PackageTools.h"
-#include "UnrealEd.h"
 #include "FbxMeshUtils.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 
@@ -43,6 +42,19 @@
 #include "Runtime/Engine/Public/EditorSupportDelegates.h"
 
 #include "UEPyIPlugin.h"
+#include "Editor/Transactor.h"
+#include "Engine/LevelStreamingAlwaysLoaded.h"
+#include "Engine/LevelStreamingDynamic.h"
+#include "Engine/SCS_Node.h"
+#include "Engine/SimpleConstructionScript.h"
+#include "Engine/TimelineTemplate.h"
+#include "Engine/UserDefinedStruct.h"
+#include "Factories/FbxImportUI.h"
+#include "Factories/MaterialInstanceConstantFactoryNew.h"
+#include "Materials/MaterialInstanceConstant.h"
+#include "Editor.h"
+#include "FileHelpers.h"
+#include "Selection.h"
 
 
 PyObject *py_unreal_engine_redraw_all_viewports(PyObject * self, PyObject * args)
@@ -398,7 +410,7 @@ PyObject *py_unreal_engine_import_asset(PyObject * self, PyObject * args)
 	else if (PyUnicodeOrString_Check(obj))
 	{
 		const char *class_name = UEPyUnicode_AsUTF8(obj);
-		UClass *u_class = FindObject<UClass>(ANY_PACKAGE, UTF8_TO_TCHAR(class_name));
+		UClass *u_class = FindFirstObject<UClass>(UTF8_TO_TCHAR(class_name));
 		if (u_class)
 		{
 			ue_PyUObject *py_obj = ue_get_python_uobject(u_class);
@@ -589,7 +601,7 @@ PyObject *py_unreal_engine_get_asset(PyObject * self, PyObject * args)
 		return PyErr_Format(PyExc_Exception, "no GEditor found");
 
 	FAssetRegistryModule& AssetRegistryModule = FModuleManager::GetModuleChecked<FAssetRegistryModule>("AssetRegistry");
-	FAssetData asset = AssetRegistryModule.Get().GetAssetByObjectPath(UTF8_TO_TCHAR(path));
+	FAssetData asset = AssetRegistryModule.Get().GetAssetByObjectPath(FSoftObjectPath(UTF8_TO_TCHAR(path)));
 	if (!asset.IsValid())
 		return PyErr_Format(PyExc_Exception, "unable to find asset %s", path);
 	Py_RETURN_UOBJECT(asset.GetAsset());
@@ -637,7 +649,7 @@ PyObject *py_unreal_engine_find_asset(PyObject * self, PyObject * args)
 		return PyErr_Format(PyExc_Exception, "no GEditor found");
 
 	FAssetRegistryModule& AssetRegistryModule = FModuleManager::GetModuleChecked<FAssetRegistryModule>("AssetRegistry");
-	FAssetData asset = AssetRegistryModule.Get().GetAssetByObjectPath(UTF8_TO_TCHAR(path));
+	FAssetData asset = AssetRegistryModule.Get().GetAssetByObjectPath(FSoftObjectPath(UTF8_TO_TCHAR(path)));
 	if (!asset.IsValid())
 	{
 		Py_RETURN_NONE;
@@ -678,7 +690,7 @@ PyObject *py_unreal_engine_create_asset(PyObject * self, PyObject * args)
 PyObject *py_unreal_engine_get_asset_referencers(PyObject * self, PyObject * args)
 {
 	char *path;
-	int depency_type = (int)EAssetRegistryDependencyType::All;
+	int depency_type = (int)UE::AssetRegistry::EDependencyCategory::All;
 
 	if (!PyArg_ParseTuple(args, "s|i:get_asset_referencers", &path, &depency_type))
 	{
@@ -707,7 +719,7 @@ PyObject *py_unreal_engine_get_asset_referencers(PyObject * self, PyObject * arg
 PyObject *py_unreal_engine_get_asset_identifier_referencers(PyObject * self, PyObject * args)
 {
 	char *path;
-	int depency_type = (int)EAssetRegistryDependencyType::All;
+	int depency_type = (int)UE::AssetRegistry::EDependencyCategory::All;
 
 	if (!PyArg_ParseTuple(args, "s|i:get_asset_identifier_referencers", &path, &depency_type))
 	{
@@ -737,7 +749,7 @@ PyObject *py_unreal_engine_get_asset_identifier_referencers(PyObject * self, PyO
 PyObject *py_unreal_engine_get_asset_dependencies(PyObject * self, PyObject * args)
 {
 	char *path;
-	int depency_type = (int)EAssetRegistryDependencyType::All;
+	int depency_type = (int)UE::AssetRegistry::EDependencyCategory::All;
 
 	if (!PyArg_ParseTuple(args, "s|i:get_asset_dependencies", &path, &depency_type))
 	{
@@ -803,7 +815,7 @@ PyObject *py_unreal_engine_rename_asset(PyObject * self, PyObject * args)
 		return PyErr_Format(PyExc_Exception, "no GEditor found");
 
 	FAssetRegistryModule& AssetRegistryModule = FModuleManager::GetModuleChecked<FAssetRegistryModule>("AssetRegistry");
-	FAssetData asset = AssetRegistryModule.Get().GetAssetByObjectPath(UTF8_TO_TCHAR(path));
+	FAssetData asset = AssetRegistryModule.Get().GetAssetByObjectPath(FSoftObjectPath(UTF8_TO_TCHAR(path)));
 	if (!asset.IsValid())
 		return PyErr_Format(PyExc_Exception, "unable to find asset %s", path);
 
@@ -863,7 +875,7 @@ PyObject *py_unreal_engine_duplicate_asset(PyObject * self, PyObject * args)
 		return PyErr_Format(PyExc_Exception, "no GEditor found");
 
 	FAssetRegistryModule& AssetRegistryModule = FModuleManager::GetModuleChecked<FAssetRegistryModule>("AssetRegistry");
-	FAssetData asset = AssetRegistryModule.Get().GetAssetByObjectPath(UTF8_TO_TCHAR(path));
+	FAssetData asset = AssetRegistryModule.Get().GetAssetByObjectPath(FSoftObjectPath(UTF8_TO_TCHAR(path)));
 	if (!asset.IsValid())
 		return PyErr_Format(PyExc_Exception, "unable to find asset %s", path);
 
@@ -908,7 +920,7 @@ PyObject *py_unreal_engine_delete_asset(PyObject * self, PyObject * args)
 	}
 
 	FAssetRegistryModule& AssetRegistryModule = FModuleManager::GetModuleChecked<FAssetRegistryModule>("AssetRegistry");
-	FAssetData asset = AssetRegistryModule.Get().GetAssetByObjectPath(UTF8_TO_TCHAR(path));
+	FAssetData asset = AssetRegistryModule.Get().GetAssetByObjectPath(FSoftObjectPath(UTF8_TO_TCHAR(path)));
 	if (!asset.IsValid())
 		return PyErr_Format(PyExc_Exception, "unable to find asset %s", path);
 
@@ -1143,7 +1155,7 @@ PyObject *py_unreal_engine_get_assets_by_class(PyObject * self, PyObject * args)
 	TArray<FAssetData> assets;
 
 	FAssetRegistryModule& AssetRegistryModule = FModuleManager::GetModuleChecked<FAssetRegistryModule>("AssetRegistry");
-	AssetRegistryModule.Get().GetAssetsByClass(UTF8_TO_TCHAR(path), assets, recursive);
+	AssetRegistryModule.Get().GetAssetsByClass(FTopLevelAssetPath(UTF8_TO_TCHAR(path)), assets, recursive);
 
 	PyObject *assets_list = PyList_New(0);
 

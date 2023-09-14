@@ -1,4 +1,5 @@
 #include "UEPyFSoftSkinVertex.h"
+#include "Misc/EngineVersionComparison.h"
 
 #if WITH_EDITOR
 
@@ -160,7 +161,11 @@ static int py_ue_fsoft_skin_vertex_set_influence_bones(ue_PyFSoftSkinVertex *sel
 
 static PyObject *py_ue_fsoft_skin_vertex_get_influence_weights(ue_PyFSoftSkinVertex *self, void *closure)
 {
+#if UE_VERSION_OLDER_THAN(5, 2, 0)
 	uint8 *data = self->ss_vertex.InfluenceWeights;
+#else
+	uint16 *data = self->ss_vertex.InfluenceWeights;
+#endif
 	return Py_BuildValue((char*)"(iiiiiiii)", data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
 }
 

@@ -103,7 +103,7 @@ static PyObject *py_ue_ftransform_get_matrix(ue_PyFTransform *self, PyObject * a
 	FTransform transform = self->transform;
 	transform.NormalizeRotation();
 	FMatrix matrix = transform.ToMatrixWithScale();
-	UScriptStruct *u_struct = FindObject<UScriptStruct>(ANY_PACKAGE, UTF8_TO_TCHAR("Matrix"));
+	UScriptStruct *u_struct = FindFirstObject<UScriptStruct>(UTF8_TO_TCHAR("Matrix"));
 	if (!u_struct)
 	{
 		return PyErr_Format(PyExc_Exception, "unable to get Matrix struct");

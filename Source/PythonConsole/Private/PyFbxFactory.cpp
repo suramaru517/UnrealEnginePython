@@ -2,6 +2,7 @@
 #include "PyFbxFactory.h"
 #include "FbxMeshUtils.h"
 #include "Runtime/Launch/Resources/Version.h"
+#include "Factories/FbxImportUI.h"
 
 UPyFbxFactory::UPyFbxFactory(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)

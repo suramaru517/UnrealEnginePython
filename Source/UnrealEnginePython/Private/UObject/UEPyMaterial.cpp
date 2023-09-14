@@ -14,6 +14,7 @@
 #include "Engine/Texture.h"
 #include "Components/PrimitiveComponent.h"
 #include "Engine/StaticMesh.h"
+#include "Misc/EngineVersionComparison.h"
 
 PyObject *py_ue_set_material_by_name(ue_PyUObject *self, PyObject * args)
 {
@@ -148,7 +149,11 @@ PyObject *py_ue_set_material_static_switch_parameter(ue_PyUObject *self, PyObjec
 		FStaticParameterSet staticParameterSet = material_instance->GetStaticParameters();
 
 		bool isExisting = false;
-		for (auto& parameter : staticParameterSet.StaticSwitchParameters)
+#if UE_VERSION_OLDER_THAN(5, 2, 0)
+		for (FStaticSwitchParameter& parameter : staticParameterSet.EditorOnly.StaticSwitchParameters)
+#else
+		for (FStaticSwitchParameter& parameter : staticParameterSet.GetRuntime().StaticSwitchParameters)
+#endif
 		{
 #if !(ENGINE_MAJOR_VERSION == 5 || (ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 19))
 			if (parameter.bOverride && parameter.ParameterName == parameterName)
@@ -173,7 +178,11 @@ PyObject *py_ue_set_material_static_switch_parameter(ue_PyUObject *self, PyObjec
 			SwitchParameter.Value = switchValue;
 
 			SwitchParameter.bOverride = true;
-			staticParameterSet.StaticSwitchParameters.Add(SwitchParameter);
+#if UE_VERSION_OLDER_THAN(5, 2, 0)
+			staticParameterSet.EditorOnly.StaticSwitchParameters.Add(SwitchParameter);
+#else
+			staticParameterSet.GetRuntime().StaticSwitchParameters.Add(SwitchParameter);
+#endif
 		}
 
 

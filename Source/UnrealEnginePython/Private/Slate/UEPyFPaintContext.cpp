@@ -77,8 +77,8 @@ static PyObject *py_ue_fpaint_context_draw_box(ue_PyFPaintContext *self, PyObjec
 	context.MaxLayer++;
 
 #if ENGINE_MAJOR_VERSION == 5 || (ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 17)
-	FSlateDrawElement::MakeBox(context.OutDrawElements, context.MaxLayer, context.AllottedGeometry.ToPaintGeometry(FVector2D(x, y), FVector2D(w, h)),
-		brush, ESlateDrawEffect::None, tint);
+	const FPaintGeometry paint_geometry = context.AllottedGeometry.ToPaintGeometry(FVector2D(w, h), FSlateLayoutTransform(FVector2f(x, y)));
+	FSlateDrawElement::MakeBox(context.OutDrawElements, context.MaxLayer, paint_geometry, brush, ESlateDrawEffect::None, tint);
 #else
 	FSlateDrawElement::MakeBox(context.OutDrawElements, context.MaxLayer, context.AllottedGeometry.ToPaintGeometry(FVector2D(x, y), FVector2D(w, h)),
 		brush, context.MyClippingRect, ESlateDrawEffect::None, tint);

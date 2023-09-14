@@ -9,11 +9,6 @@ extern PyTypeObject ue_PySPythonTreeViewType;
 class SPythonTreeView : public STreeView<TSharedPtr<struct FPythonItem>>
 {
 public:
-	~SPythonTreeView()
-	{
-		delete(ItemsSource);
-	}
-
 	void SetPythonItemExpansion(PyObject *item, bool InShouldExpandItem);
 };
 

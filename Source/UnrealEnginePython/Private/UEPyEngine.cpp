@@ -27,6 +27,8 @@
 
 #include "Runtime/Slate/Public/Framework/Application/SlateApplication.h"
 #include "Runtime/CoreUObject/Public/UObject/UObjectIterator.h"
+#include "Misc/App.h"
+#include "UnrealClient.h"
 
 PyObject *py_unreal_engine_log(PyObject * self, PyObject * args)
 {
@@ -259,7 +261,7 @@ PyObject *py_unreal_engine_find_class(PyObject * self, PyObject * args)
 		return NULL;
 	}
 
-	UClass *u_class = FindObject<UClass>(ANY_PACKAGE, UTF8_TO_TCHAR(name));
+	UClass *u_class = FindFirstObject<UClass>(UTF8_TO_TCHAR(name));
 
 	if (!u_class)
 		return PyErr_Format(PyExc_Exception, "unable to find class %s", name);
@@ -275,7 +277,7 @@ PyObject *py_unreal_engine_find_enum(PyObject * self, PyObject * args)
 		return NULL;
 	}
 
-	UEnum *u_enum = FindObject<UEnum>(ANY_PACKAGE, UTF8_TO_TCHAR(name));
+	UEnum *u_enum = FindFirstObject<UEnum>(UTF8_TO_TCHAR(name));
 
 	if (!u_enum)
 		return PyErr_Format(PyExc_Exception, "unable to find enum %s", name);
@@ -397,7 +399,7 @@ PyObject *py_unreal_engine_find_struct(PyObject * self, PyObject * args)
 		return NULL;
 	}
 
-	UScriptStruct *u_struct = FindObject<UScriptStruct>(ANY_PACKAGE, UTF8_TO_TCHAR(name));
+	UScriptStruct *u_struct = FindFirstObject<UScriptStruct>(UTF8_TO_TCHAR(name));
 
 	if (!u_struct)
 		return PyErr_Format(PyExc_Exception, "unable to find struct %s", name);
@@ -475,7 +477,7 @@ PyObject *py_unreal_engine_string_to_guid(PyObject * self, PyObject * args)
 
 	if (FGuid::Parse(FString(str), guid))
 	{
-		return py_ue_new_owned_uscriptstruct(FindObject<UScriptStruct>(ANY_PACKAGE, UTF8_TO_TCHAR((char *)"Guid")), (uint8 *)&guid);
+		return py_ue_new_owned_uscriptstruct(FindFirstObject<UScriptStruct>(UTF8_TO_TCHAR((char *)"Guid")), (uint8 *)&guid);
 	}
 
 	return PyErr_Format(PyExc_Exception, "unable to build FGuid");
@@ -486,7 +488,7 @@ PyObject *py_unreal_engine_new_guid(PyObject * self, PyObject * args)
 
 	FGuid guid = FGuid::NewGuid();
 
-	return py_ue_new_owned_uscriptstruct(FindObject<UScriptStruct>(ANY_PACKAGE, UTF8_TO_TCHAR((char *)"Guid")), (uint8 *)&guid);
+	return py_ue_new_owned_uscriptstruct(FindFirstObject<UScriptStruct>(UTF8_TO_TCHAR((char *)"Guid")), (uint8 *)&guid);
 }
 
 PyObject *py_unreal_engine_guid_to_string(PyObject * self, PyObject * args)
@@ -558,7 +560,7 @@ PyObject *py_unreal_engine_find_object(PyObject * self, PyObject * args)
 		return NULL;
 	}
 
-	UObject *u_object = FindObject<UObject>(ANY_PACKAGE, UTF8_TO_TCHAR(name));
+	UObject *u_object = FindFirstObject<UObject>(UTF8_TO_TCHAR(name));
 
 	if (!u_object)
 		return PyErr_Format(PyExc_Exception, "unable to find object %s", name);
@@ -1055,7 +1057,7 @@ PyObject *py_unreal_engine_create_package(PyObject *self, PyObject * args)
 		return nullptr;
 	}
 
-	UPackage *u_package = (UPackage *)StaticFindObject(nullptr, ANY_PACKAGE, UTF8_TO_TCHAR(name), true);
+	UPackage *u_package = (UPackage *)StaticFindFirstObject(nullptr, UTF8_TO_TCHAR(name), EFindFirstObjectOptions::ExactClass);
 	// create a new package if it does not exist
 	if (u_package)
 	{
@@ -1068,7 +1070,8 @@ PyObject *py_unreal_engine_create_package(PyObject *self, PyObject * args)
 #endif
 	if (!u_package)
 		return PyErr_Format(PyExc_Exception, "unable to create package");
-	u_package->FileName = *FPackageName::LongPackageNameToFilename(UTF8_TO_TCHAR(name), FPackageName::GetAssetPackageExtension());
+	const FName file_name = *FPackageName::LongPackageNameToFilename(UTF8_TO_TCHAR(name), FPackageName::GetAssetPackageExtension());
+	u_package->SetLoadedPath(FPackagePath::FromPackageNameChecked(file_name));
 
 	u_package->FullyLoad();
 	u_package->MarkPackageDirty();
@@ -1086,7 +1089,7 @@ PyObject *py_unreal_engine_get_or_create_package(PyObject *self, PyObject * args
 		return nullptr;
 	}
 
-	UPackage *u_package = (UPackage *)StaticFindObject(nullptr, ANY_PACKAGE, UTF8_TO_TCHAR(name), true);
+	UPackage *u_package = (UPackage *)StaticFindFirstObject(nullptr, UTF8_TO_TCHAR(name), EFindFirstObjectOptions::ExactClass);
 	// create a new package if it does not exist
 	if (!u_package)
 	{
@@ -1097,7 +1100,8 @@ PyObject *py_unreal_engine_get_or_create_package(PyObject *self, PyObject * args
 #endif
 		if (!u_package)
 			return PyErr_Format(PyExc_Exception, "unable to create package");
-		u_package->FileName = *FPackageName::LongPackageNameToFilename(UTF8_TO_TCHAR(name), FPackageName::GetAssetPackageExtension());
+		const FName file_name = *FPackageName::LongPackageNameToFilename(UTF8_TO_TCHAR(name), FPackageName::GetAssetPackageExtension());
+		u_package->SetLoadedPath(FPackagePath::FromPackageNameChecked(file_name));
 
 		u_package->FullyLoad();
 		u_package->MarkPackageDirty();
@@ -1302,7 +1306,6 @@ PyObject *py_unreal_engine_copy_properties_for_unrelated_objects(PyObject * self
 		return PyErr_Format(PyExc_Exception, "argument is not a UObject");
 
 	UEngine::FCopyPropertiesForUnrelatedObjectsParams params;
-	params.bAggressiveDefaultSubobjectReplacement = (py_aggressive_default_subobject_replacement && PyObject_IsTrue(py_aggressive_default_subobject_replacement));
 	params.bCopyDeprecatedProperties = (py_copy_deprecated_properties && PyObject_IsTrue(py_copy_deprecated_properties));
 	params.bDoDelta = (py_do_delta && PyObject_IsTrue(py_do_delta));
 	params.bNotifyObjectReplacement = (py_notify_object_replacement && PyObject_IsTrue(py_notify_object_replacement));

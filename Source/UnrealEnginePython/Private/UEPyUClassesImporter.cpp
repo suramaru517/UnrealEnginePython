@@ -10,7 +10,7 @@ static PyObject *ue_PyUClassesImporter_getattro(ue_PyUClassesImporter *self, PyO
 			const char *attr = UEPyUnicode_AsUTF8(attr_name);
 			if (attr[0] != '_')
 			{
-				UClass *u_class = FindObject<UClass>(ANY_PACKAGE, UTF8_TO_TCHAR(attr));
+				UClass *u_class = FindFirstObject<UClass>(UTF8_TO_TCHAR(attr));
 				if (u_class)
 				{
 					// swallow old exception

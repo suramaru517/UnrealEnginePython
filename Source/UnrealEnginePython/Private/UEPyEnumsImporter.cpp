@@ -10,7 +10,7 @@ static PyObject *ue_PyEnumsImporter_getattro(ue_PyEnumsImporter *self, PyObject 
 			const char *attr = UEPyUnicode_AsUTF8(attr_name);
 			if (attr[0] != '_')
 			{
-				UEnum *u_enum = FindObject<UEnum>(ANY_PACKAGE, UTF8_TO_TCHAR(attr));
+				UEnum *u_enum = FindFirstObject<UEnum>(UTF8_TO_TCHAR(attr));
 				if (u_enum)
 				{
 					// swallow old exception

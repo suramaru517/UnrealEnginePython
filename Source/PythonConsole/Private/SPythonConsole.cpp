@@ -2,7 +2,7 @@
 
 #include "SPythonConsole.h"
 #include "PythonConsoleModule.h"
-#include "SPythonConsole.h"
+#include "SlateOptMacros.h"
 #include "SPythonLog.h"
 
 namespace PythonConsoleDefs
@@ -37,7 +37,7 @@ void SPythonConsole::Construct( const FArguments& InArgs, const EPythonConsoleSt
 					.HeightOverride( 200.0f )
 					[
 						SNew( SBorder )
-							.BorderImage( FEditorStyle::GetBrush( "ToolPanel.GroupBorder" ) )
+							.BorderImage( FAppStyle::GetBrush( "ToolPanel.GroupBorder" ) )
 							.ColorAndOpacity( this, &SPythonConsole::GetAnimatedColorAndOpacity )
 							.BorderBackgroundColor( this, &SPythonConsole::GetAnimatedSlateColor )
 							[
@@ -57,7 +57,7 @@ void SPythonConsole::Construct( const FArguments& InArgs, const EPythonConsoleSt
 			[
 				SNew( SBorder )
 				.Padding( FMargin(2) )
-				.BorderImage( FEditorStyle::GetBrush( "PythonConsole.Background" ) )
+				.BorderImage( FAppStyle::GetBrush( "PythonConsole.Background" ) )
 				.ColorAndOpacity( this, &SPythonConsole::GetAnimatedColorAndOpacity )
 				.BorderBackgroundColor( this, &SPythonConsole::GetAnimatedSlateColor )
 				[

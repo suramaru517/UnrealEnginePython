@@ -33,6 +33,7 @@ public class PythonConsole : ModuleRules
                 "SlateCore",
                 "EditorStyle",
                 "TargetPlatform",
+                "OutputLog",
                 "UnrealEnginePython"
             }
         );

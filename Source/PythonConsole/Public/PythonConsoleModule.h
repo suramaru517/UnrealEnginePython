@@ -2,8 +2,6 @@
 
 #pragma once
 
-#include "Runtime/Slate/Public/SlateBasics.h"
-
 /** Style of the debug console */
 namespace EPythonConsoleStyle
 {

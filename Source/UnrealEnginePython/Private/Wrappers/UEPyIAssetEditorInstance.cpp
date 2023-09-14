@@ -1,4 +1,5 @@
 #include "UEPyIAssetEditorInstance.h"
+#include "Misc/EngineVersionComparison.h"
 
 #if WITH_EDITOR
 
@@ -6,7 +7,11 @@
 
 static PyObject *py_ue_iasset_editor_instance_close_window(ue_PyIAssetEditorInstance *self, PyObject * args)
 {
+#if UE_VERSION_OLDER_THAN(5, 3, 0)
 	self->editor_instance->CloseWindow();
+#else
+	self->editor_instance->CloseWindow(EAssetEditorCloseReason::AssetEditorHostClosed);
+#endif
 	Py_RETURN_NONE;
 }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "UnrealEnginePython.h"
+#include "UObject/Package.h"
 #include "PythonClass.generated.h"
 
 void unreal_engine_py_log_error();

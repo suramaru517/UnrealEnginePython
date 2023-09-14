@@ -2,6 +2,7 @@
 #include "UEPySPythonTreeView.h"
 
 #include "Runtime/Slate/Public/Widgets/Views/STreeView.h"
+#include "Misc/EngineVersionComparison.h"
 
 
 
@@ -20,7 +21,13 @@ static PyObject *py_ue_spython_tree_view_set_item_expansion(ue_PySPythonTreeView
 
 void SPythonTreeView::SetPythonItemExpansion(PyObject *item, bool InShouldExpandItem)
 {
-	for (TSharedPtr<struct FPythonItem> PythonItem : *ItemsSource)
+#if UE_VERSION_OLDER_THAN(5, 2, 0)
+	for (const TSharedPtr<FPythonItem>& PythonItem : *ItemsSource)
+#elif UE_VERSION_OLDER_THAN(5, 3, 0)
+	for (const TSharedPtr<FPythonItem>& PythonItem : GetItems())
+#else
+	for (const TSharedPtr<FPythonItem>& PythonItem : GetRootItems())
+#endif
 	{
 		if (PythonItem->py_object == item)
 		{

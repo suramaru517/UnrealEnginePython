@@ -10,12 +10,13 @@
 #include "Engine/UserDefinedEnum.h"
 
 #if WITH_EDITOR
-#include "Runtime/AssetRegistry/Public/AssetRegistryModule.h"
+#include "AssetRegistry/AssetRegistryModule.h"
 #include "ObjectTools.h"
-#include "UnrealEd.h"
 #include "Runtime/Core/Public/HAL/FeedbackContextAnsi.h"
 
 #include "Wrappers/UEPyFObjectThumbnail.h"
+#include "UObject/SavePackage.h"
+#include "EditorReimportHandler.h"
 #endif
 
 #include "Runtime/Core/Public/Misc/OutputDeviceNull.h"
@@ -1217,7 +1218,7 @@ PyObject *py_ue_broadcast(ue_PyUObject *self, PyObject *args)
 					if (!default_key_value.IsEmpty())
 					{
 #if ENGINE_MAJOR_VERSION == 5 || (ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 17)
-						prop->ImportText(*default_key_value, prop->ContainerPtrToValuePtr<uint8>(parms), PPF_None, NULL);
+						prop->ImportText_Direct(*default_key_value, prop->ContainerPtrToValuePtr<uint8>(parms), NULL, PPF_None);
 #else
 						prop->ImportText(*default_key_value, prop->ContainerPtrToValuePtr<uint8>(parms), PPF_Localized, NULL);
 #endif
@@ -2794,7 +2795,8 @@ PyObject *py_ue_save_package(ue_PyUObject * self, PyObject * args)
 		if (!package)
 			return PyErr_Format(PyExc_Exception, "unable to create package");
 
-		package->FileName = *FPackageName::LongPackageNameToFilename(UTF8_TO_TCHAR(name), bIsMap ? FPackageName::GetMapPackageExtension() : FPackageName::GetAssetPackageExtension());
+		const FName file_name = *FPackageName::LongPackageNameToFilename(UTF8_TO_TCHAR(name), bIsMap ? FPackageName::GetMapPackageExtension() : FPackageName::GetAssetPackageExtension());
+		package->SetLoadedPath(FPackagePath::FromPackageNameChecked(file_name));
 		if (has_package)
 		{
 			FString split_path;
@@ -2824,19 +2826,24 @@ PyObject *py_ue_save_package(ue_PyUObject * self, PyObject * args)
 	package->FullyLoad();
 	package->MarkPackageDirty();
 
-	if (package->FileName.IsNone())
+	if (package->GetLoadedPath().IsEmpty())
 	{
-		package->FileName = *FPackageName::LongPackageNameToFilename(*package->GetPathName(), bIsMap ? FPackageName::GetMapPackageExtension() : FPackageName::GetAssetPackageExtension());
-		UE_LOG(LogPython, Warning, TEXT("no file mapped to UPackage %s, setting its FileName to %s"), *package->GetPathName(), *package->FileName.ToString());
+		const FName file_name = *FPackageName::LongPackageNameToFilename(*package->GetPathName(), bIsMap ? FPackageName::GetMapPackageExtension() : FPackageName::GetAssetPackageExtension());
+		package->SetLoadedPath(FPackagePath::FromPackageNameChecked(file_name));
+		UE_LOG(LogPython, Warning, TEXT("no file mapped to UPackage %s, setting its FileName to %s"), *package->GetPathName(), *package->GetLoadedPath().GetPackageName());
 	}
 
 	// NOTE: FileName may not be a fully qualified filepath
-	if (FPackageName::IsValidLongPackageName(package->FileName.ToString()))
+	if (FPackageName::IsValidLongPackageName(package->GetLoadedPath().GetPackageName()))
 	{
-		package->FileName = *FPackageName::LongPackageNameToFilename(package->GetPathName(), bIsMap ? FPackageName::GetMapPackageExtension() : FPackageName::GetAssetPackageExtension());
+		const FName file_name = *FPackageName::LongPackageNameToFilename(package->GetPathName(), bIsMap ? FPackageName::GetMapPackageExtension() : FPackageName::GetAssetPackageExtension());
+		package->SetLoadedPath(FPackagePath::FromPackageNameChecked(file_name));
 	}
 
-	if (UPackage::SavePackage(package, u_object, RF_Standalone, *package->FileName.ToString()))
+	FSavePackageArgs save_args;
+	save_args.TopLevelFlags = RF_Standalone;
+
+	if (UPackage::SavePackage(package, u_object, *package->GetLoadedPath().GetPackageName(), save_args))
 	{
 		FAssetRegistryModule::AssetCreated(u_object);
 		Py_RETURN_UOBJECT(u_object);

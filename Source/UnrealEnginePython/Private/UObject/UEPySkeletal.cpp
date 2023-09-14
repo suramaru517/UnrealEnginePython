@@ -14,6 +14,10 @@
 #endif
 
 #include "Animation/AnimInstance.h"
+#include "Animation/Skeleton.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Engine/SkeletalMesh.h"
+#include "Engine/SkinnedAssetCommon.h"
 
 
 PyObject *py_ue_get_anim_instance(ue_PyUObject *self, PyObject * args)
@@ -47,7 +51,7 @@ PyObject *py_ue_set_skeletal_mesh(ue_PyUObject *self, PyObject * args)
 	if (!PyArg_ParseTuple(args, "O|O:set_skeletal_mesh", &py_skeletal_mesh, &py_reinit_pose))
 		return nullptr;
 
-	USkinnedMeshComponent *component = ue_py_check_type<USkinnedMeshComponent>(self);
+	USkeletalMeshComponent *component = ue_py_check_type<USkeletalMeshComponent>(self);
 	if (!component)
 		return PyErr_Format(PyExc_Exception, "uobject is not a USkeletalMeshComponent");
 
